@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Voxel Pond — a tiny voxel fishing game</title>
 <style>
   html, body { margin:0; padding:0; height:100%; overflow:hidden; background:#79b5e0;
@@ -40,6 +40,36 @@
     text-shadow:0 1px 2px rgba(255,255,255,.65); max-width:46%; line-height:1.45; }
   #err { position:fixed; left:0; right:0; bottom:0; background:#c62828; color:#fff; font:12px monospace;
     padding:4px 8px; display:none; white-space:pre-wrap; z-index:9; }
+
+  /* ================= small / portrait screens ================= */
+  @media (max-width: 640px) {
+    .panel { border-width:2px; border-radius:9px; padding:6px 10px; }
+    /* header stacks: title full-width on top, stats bar + collection chip below */
+    #title { top:10px; left:10px; right:10px; }
+    #title h1 { font-size:20px; }
+    #title p { font-size:11px; }
+    #stats { top:82px; left:10px; right:auto; display:flex; gap:14px; align-items:baseline;
+      text-align:left; font-size:13px; line-height:1.3; }
+    #stats b { font-size:16px; }
+    /* collection starts as a slim collapsed chip; tap to expand */
+    #dex { top:82px; right:10px; left:auto; width:auto; font-size:12px; padding:6px 10px; }
+    #dex.open { width:172px; }
+    #dex h2 { margin:0; font-size:12px; cursor:pointer; }
+    #dex h2::after { content:' ▸'; }
+    #dex.open h2::after { content:' ▾'; }
+    #dex #dexrows { display:none; margin-top:6px; max-height:46vh; overflow-y:auto; }
+    #dex.open #dexrows { display:block; }
+    #dex .row { padding:2px 0; gap:6px; }
+    #dex .chip { width:13px; height:13px; }
+    /* toast sits above the footer credit, never on top of it */
+    #hint { bottom:76px; font-size:15px; padding:8px 16px; white-space:normal;
+      max-width:92vw; text-align:center; }
+    #credit { left:10px; right:10px; bottom:8px; max-width:none; font-size:11px;
+      line-height:1.4; text-align:center; }
+    #banner { top:24%; max-width:88vw; padding:10px 18px; }
+    #banner .fish { font-size:22px; }
+    #banner .sub { font-size:14px; }
+  }
 </style>
 </head>
 <body>
@@ -156,10 +186,11 @@ function resize() {
   cv.width = Math.round(VW * dpr); cv.height = Math.round(VH * dpr);
   cv.style.width = VW + 'px'; cv.style.height = VH + 'px';
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  const s = Math.min(VW / 1180, VH / 760);
+  const portrait = VH > VW;
+  const s = portrait ? Math.min(VW / 860, VH / 640) : Math.min(VW / 1180, VH / 760);
   TW = 64 * s; TH = 32 * s; ZH = 31 * s;
   OX = VW / 2 - ((GW - GD) / 2) * (TW / 2) - TW / 2;
-  OY = VH * 0.16;
+  OY = portrait ? VH * 0.34 : VH * 0.16;
 }
 window.addEventListener('resize', resize);
 resize();
@@ -485,6 +516,12 @@ function showBanner(sp, weight, pts) {
 }
 
 /* ================= input ================= */
+/* on small screens the collection panel collapses to a chip; tap toggles it */
+const dexEl = document.getElementById('dex');
+dexEl.addEventListener('pointerdown', e => {
+  if (window.innerWidth > 640) return;
+  if (!dexEl.classList.contains('open') || e.target.closest('h2')) dexEl.classList.toggle('open');
+});
 cv.addEventListener('pointerdown', e => { primaryAction(e.clientX, e.clientY); });
 window.addEventListener('keydown', e => {
   if (e.code === 'Space') { e.preventDefault(); primaryAction(null); }
